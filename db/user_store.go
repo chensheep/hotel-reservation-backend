@@ -6,6 +6,7 @@ import (
 
 	"github.com/chensheep/hotel-reservation-backend/types"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -13,8 +14,8 @@ const USERCOLL = "user"
 
 type UserStore interface {
 	GetUser(ctx context.Context, id string) (*types.User, error)
-	GetUsers() ([]*types.User, error)
-	CreateUser(user types.User) (*types.User, error)
+	GetUsers(ctx context.Context) ([]*types.User, error)
+	CreateUser(ctx context.Context, user *types.User) (*types.User, error)
 	UpdateUser(id string, user types.User) (*types.User, error)
 	DeleteUser(id string) error
 }
@@ -51,12 +52,29 @@ func (m *MongoUserStore) GetUser(ctx context.Context, id string) (*types.User, e
 	return &gotUser, nil
 }
 
-func (m *MongoUserStore) GetUsers() ([]*types.User, error) {
-	return nil, fmt.Errorf("not implemented")
+func (m *MongoUserStore) GetUsers(ctx context.Context) ([]*types.User, error) {
+	cursor, err := m.coll.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+
+	users := []*types.User{}
+	err = cursor.All(ctx, &users)
+	if err != nil {
+		return users, err
+	}
+
+	return users, nil
 }
 
-func (m *MongoUserStore) CreateUser(user types.User) (*types.User, error) {
-	return nil, fmt.Errorf("not implemented")
+func (m *MongoUserStore) CreateUser(ctx context.Context, user *types.User) (*types.User, error) {
+	res, err := m.coll.InsertOne(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+	user.ID = res.InsertedID.(primitive.ObjectID)
+
+	return user, nil
 }
 
 func (m *MongoUserStore) UpdateUser(id string, user types.User) (*types.User, error) {
