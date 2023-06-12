@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/mail"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -43,6 +44,25 @@ func (params CreateUserParams) Validate() map[string]string {
 	}
 
 	return errors
+}
+
+type UpdateUserParams struct {
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+}
+
+func (p UpdateUserParams) ToBSONM() bson.M {
+	m := bson.M{}
+
+	if p.FirstName != "" {
+		m["first_name"] = p.FirstName
+	}
+
+	if p.LastName != "" {
+		m["last_name"] = p.LastName
+	}
+
+	return m
 }
 
 type User struct {

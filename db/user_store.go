@@ -16,8 +16,8 @@ type UserStore interface {
 	GetUser(ctx context.Context, id string) (*types.User, error)
 	GetUsers(ctx context.Context) ([]*types.User, error)
 	CreateUser(ctx context.Context, user *types.User) (*types.User, error)
-	UpdateUser(id string, user types.User) (*types.User, error)
-	DeleteUser(id string) error
+	UpdateUser(ctx context.Context, id string, update types.UpdateUserParams) error
+	DeleteUser(ctx context.Context, id string) error
 }
 
 type MongoUserStore struct {
@@ -77,10 +77,44 @@ func (m *MongoUserStore) CreateUser(ctx context.Context, user *types.User) (*typ
 	return user, nil
 }
 
-func (m *MongoUserStore) UpdateUser(id string, user types.User) (*types.User, error) {
-	return nil, fmt.Errorf("not implemented")
+func (m *MongoUserStore) UpdateUser(ctx context.Context, id string, update types.UpdateUserParams) error {
+	objectID, err := toObjectID(id)
+	if err != nil {
+		return err
+	}
+
+	_, err = m.coll.UpdateOne(
+		ctx, bson.M{
+			"_id": objectID,
+		},
+		bson.D{
+			{Key: "$set", Value: update.ToBSONM()},
+		},
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (m *MongoUserStore) DeleteUser(id string) error {
-	return fmt.Errorf("not implemented")
+func (m *MongoUserStore) DeleteUser(ctx context.Context, id string) error {
+
+	objectID, err := toObjectID(id)
+	if err != nil {
+		return err
+	}
+
+	res, err := m.coll.DeleteOne(ctx, bson.M{
+		"_id": objectID,
+	})
+	if err != nil {
+		return err
+	}
+
+	if res.DeletedCount == 0 {
+		return fmt.Errorf("no user deleted")
+	}
+
+	return nil
 }
