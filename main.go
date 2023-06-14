@@ -35,7 +35,7 @@ func main() {
 	}()
 
 	// initialize the handlers
-	userStore := db.NewMongoUserStore(client)
+	userStore := db.NewMongoUserStore(client, db.DBNAME)
 	userHandler := api.NewUserHandler(userStore)
 
 	listenAddr := flag.String("listenAddr", ":3000", "The listen address of the API server")

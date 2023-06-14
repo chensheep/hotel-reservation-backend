@@ -25,8 +25,8 @@ type MongoUserStore struct {
 	coll   *mongo.Collection
 }
 
-func NewMongoUserStore(client *mongo.Client) *MongoUserStore {
-	coll := client.Database(DBNAME).Collection(USERCOLL)
+func NewMongoUserStore(client *mongo.Client, dbName string) *MongoUserStore {
+	coll := client.Database(dbName).Collection(USERCOLL)
 	return &MongoUserStore{
 		client: client,
 		coll:   coll,
